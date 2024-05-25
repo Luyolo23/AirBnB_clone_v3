@@ -151,7 +151,7 @@ EOF  all  create  destroy  help  quit  show  update
 ```
 
 ## Bugs
-No known bugs at this time. 
+There are currently no known bugs. 
 
 ## Authors
 Luyolo Tuta - https://github.com/Luyolo23
