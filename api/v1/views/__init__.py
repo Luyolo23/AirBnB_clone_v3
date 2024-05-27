@@ -5,3 +5,4 @@ app_views = Blueprint('app_views', __name__)
 from.index import *
 from.states import *
 from.cities import *
+from.amenities import *
