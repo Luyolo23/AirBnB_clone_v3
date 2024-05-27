@@ -11,80 +11,68 @@ from models import storage
 @app_views.route('/users', methods=['GET'], strict_slashes=False)
 def getAllUsers():
     """Retrieves the list of all User objects"""
-    retval = []
-    all_users = storage.all('User')
-    for item in all_users.values():
-        retval.append(item.to_dict())
-    return jsonify(retval)
+    user_list = [user.to_dict() for user in storage.all('User').values()]
+    return jsonify(user_list)
 
 
-@app_views.route('/users/<user_id>', strict_slashes=False, methods=['GET'])
+@app_views.route(
+        '/users/<user_id>', strict_slashes=False, methods=['GET'])
 def GET_user(user_id):
-    """GET User object, else raise 404"""
-
+    """Retrieves a specific User object by ID"""
     user = storage.get("User", user_id)
     if user is None:
-        abort(404)
+        abort(404, description="User not found")
     return jsonify(user.to_dict())
 
 
-@app_views.route('/users/<user_id>',
-                 strict_slashes=False, methods=['DELETE'])
+@app_views.route(
+        '/users/<user_id>', strict_slashes=False, methods=['DELETE'])
 def DEL_user(user_id):
-    """ delete a user object """
+    """Deletes a specific User object by ID"""
     user = storage.get("User", user_id)
     if user is None:
-        abort(404)
+        abort(404, description="User not found")
 
     user.delete()
     storage.save()
-    storage.close()
     return jsonify({}), 200
 
 
 @app_views.route('/users', methods=['POST'], strict_slashes=False)
 def POST_user():
-    """adds user, raise 400 if not valid json"""
-    post_content = request.get_json()
-
+    """Creates a new User object"""
     if not request.is_json:
-        abort(400, "Not a JSON")
+        abort(400, description="Not a JSON")
 
-    email = post_content.get('email')
-    if not email:
-        abort(400, "Missing email")
+    data = request.get_json()
+    required_fields = ['email', 'password']
 
-    password = post_content.get('password')
-    if not password:
-        abort(400, "Missing password")
+    for field in required_fields:
+        if field not in data:
+            abort(400, description=f"Missing {field}")
 
-    new_user = User(**post_content)
+    new_user = User(**data)
     storage.new(new_user)
-
     new_user.save()
-    storage.close()
     return jsonify(new_user.to_dict()), 201
 
 
 @app_views.route('/users/<user_id>', methods=['PUT'], strict_slashes=False)
 def PUT_user(user_id):
-    """Update user, raise 404 if none, raise 400 if not json"""
+    """Updates a specific User object by ID"""
     user = storage.get("User", user_id)
     if user is None:
-        abort(404)
-
-    ignore_keys = ["id", "created_at", "updated_at", "email"]
-
-    content = request.get_json()
+        abort(404, description="User not found")
 
     if not request.is_json:
-        abort(400, "Not a JSON")
+        abort(400, description="Not a JSON")
 
-    for key, val in content.items():
+    ignore_keys = ["id", "created_at", "updated_at", "email"]
+    data = request.get_json()
+
+    for key, value in data.items():
         if key not in ignore_keys:
-            setattr(user, key, val)
+            setattr(user, key, value)
 
     user.save()
-    storage.close()
-
     return jsonify(user.to_dict()), 200
