@@ -6,18 +6,15 @@ from models.place import Place
 from models.review import Review
 from models.state import State
 from models.user import User
-from flask import jsonify
+from flask import Flask, jsonify
 from api.v1.views import app_views
 from models import storage
 
 
-@app_views.route('/status', methods=['GET'])
-def status():
-    """returns status JSON message for route"""
-    return jsonify({"status": "OK"})
+app = Flask(__name__)
 
 
-@app_views.route('/stats', methods=['GET'], strict_slashes=False)
+@app_views.route('/api/v1/stats', methods=['GET'], strict_slashes=False)
 def stats():
     """Retrieves the number of each object by type"""
     stats = {
@@ -29,3 +26,7 @@ def stats():
         "users": storage.count(User)
     }
     return jsonify(stats)
+
+
+if __name__ == "__main__":
+    app.run(host='0.0.0.0', port=5000)
